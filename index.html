@@ -149,6 +149,75 @@
             to { box-shadow: 0 0 50px rgba(241, 196, 15, 1); }
         }
 
+        .hole.star .mole {
+            background: linear-gradient(135deg, #ff00ff 0%, #00ffff 50%, #ffff00 100%);
+            box-shadow: 0 0 40px rgba(255, 215, 255, 1);
+            animation: starGlow 0.3s infinite alternate;
+        }
+
+        .hole.star .mole::before {
+            content: '🌟';
+            filter: drop-shadow(0 0 10px white);
+            animation: starRotate 2s linear infinite;
+        }
+
+        @keyframes starGlow {
+            from { box-shadow: 0 0 40px rgba(255, 215, 255, 1); }
+            to { box-shadow: 0 0 60px rgba(255, 255, 0, 1); }
+        }
+
+        @keyframes starRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .fever-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%);
+            animation: feverPulse 0.5s infinite alternate;
+        }
+
+        @keyframes feverPulse {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+
+        .fever-indicator {
+            position: fixed;
+            top: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ff00ff 0%, #00ffff 50%, #ffff00 100%);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 20px;
+            font-size: 2em;
+            font-weight: bold;
+            box-shadow: 0 10px 40px rgba(255, 215, 0, 0.8);
+            display: none;
+            animation: feverBounce 0.5s infinite alternate;
+            z-index: 10000;
+        }
+
+        .fever-indicator.show {
+            display: block;
+        }
+
+        @keyframes feverBounce {
+            from {
+                transform: translateX(-50%) scale(1) rotate(-3deg);
+            }
+            to {
+                transform: translateX(-50%) scale(1.1) rotate(3deg);
+            }
+        }
+
         .high-score-modal {
             position: fixed;
             top: 0;
@@ -851,6 +920,12 @@
         </div>
     </div>
 
+    <div id="feverMode" class="fever-mode" style="display: none;"></div>
+    <div id="feverIndicator" class="fever-indicator">
+        ✨ フィーバータイム！ ✨<br>
+        <span style="font-size: 0.7em;">全モグラ2倍得点！</span>
+    </div>
+
     <script>
         let score = 0;
         let timeLeft = 30;
@@ -869,6 +944,8 @@
         let totalHits = 0;
         let totalClicks = 0;
         let maxComboReached = 0;
+        let isFeverMode = false;
+        let feverTimeout = null;
 
         // 難易度設定（遊びやすさ重視でバランス調整）
         const difficultySettings = {
@@ -909,6 +986,8 @@
         const nameInputContainer = document.getElementById('nameInputContainer');
         const playerNameInput = document.getElementById('playerNameInput');
         const closeModalBtn = document.getElementById('closeModalBtn');
+        const feverModeElement = document.getElementById('feverMode');
+        const feverIndicator = document.getElementById('feverIndicator');
         const holes = document.querySelectorAll('.hole');
 
         // 初期ハイスコア表示
@@ -1286,6 +1365,38 @@
             }, 3000);
         }
 
+        // フィーバーモードを開始
+        function startFeverMode() {
+            isFeverMode = true;
+            feverModeElement.style.display = 'block';
+            feverIndicator.classList.add('show');
+
+            // 特殊な音を鳴らす
+            playSound('treasure');
+
+            // 紙吹雪を画面中央に
+            createConfetti(window.innerWidth / 2, window.innerHeight / 2, 60);
+
+            // 8秒後にフィーバーモードを終了
+            if (feverTimeout) {
+                clearTimeout(feverTimeout);
+            }
+            feverTimeout = setTimeout(() => {
+                endFeverMode();
+            }, 8000);
+        }
+
+        // フィーバーモードを終了
+        function endFeverMode() {
+            isFeverMode = false;
+            feverModeElement.style.display = 'none';
+            feverIndicator.classList.remove('show');
+            if (feverTimeout) {
+                clearTimeout(feverTimeout);
+                feverTimeout = null;
+            }
+        }
+
         // スタートボタンのクリックイベント
         startButton.addEventListener('click', () => {
             startButton.disabled = true;
@@ -1331,6 +1442,7 @@
             totalHits = 0;
             totalClicks = 0;
             maxComboReached = 0;
+            endFeverMode(); // フィーバーモードをリセット
 
             // 難易度に応じた初期速度を設定
             const settings = difficultySettings[selectedDifficulty];
@@ -1355,6 +1467,7 @@
                 hole.classList.remove('bomb');
                 hole.classList.remove('clock');
                 hole.classList.remove('treasure');
+                hole.classList.remove('star');
             });
 
             // タイマーの警告クラスをリセット
@@ -1408,6 +1521,7 @@
                 hole.classList.remove('bomb');
                 hole.classList.remove('clock');
                 hole.classList.remove('treasure');
+                hole.classList.remove('star');
             });
 
             // ランダムな穴を選択
@@ -1425,12 +1539,16 @@
             else if (rand < 0.12) {
                 randomHole.classList.add('treasure');
             }
+            // 3%の確率でスターを出現（新アイテム）
+            else if (rand < 0.15) {
+                randomHole.classList.add('star');
+            }
             // 10%の確率で時計ボーナスを出現（7% → 10%に増加）
-            else if (rand < 0.22) {
+            else if (rand < 0.25) {
                 randomHole.classList.add('clock');
             }
             // 18%の確率で金色のモグラを出現（15% → 18%に増加）
-            else if (rand < 0.40) {
+            else if (rand < 0.43) {
                 randomHole.classList.add('golden');
             }
 
@@ -1445,6 +1563,7 @@
                 randomHole.classList.remove('bomb');
                 randomHole.classList.remove('clock');
                 randomHole.classList.remove('treasure');
+                randomHole.classList.remove('star');
             }, displayTime);
         }
 
@@ -1464,6 +1583,7 @@
                 const isGolden = hole.classList.contains('golden');
                 const isClock = hole.classList.contains('clock');
                 const isTreasure = hole.classList.contains('treasure');
+                const isStar = hole.classList.contains('star');
 
                 if (isBomb) {
                     // 爆弾をクリック（ペナルティを軽減）
@@ -1555,11 +1675,45 @@
                     setTimeout(() => {
                         hole.style.background = '#8b7355';
                     }, 200);
+                } else if (isStar) {
+                    // スターをクリック（フィーバーモード発動）
+                    totalHits++; // 統計: ヒット数
+                    score += 10;
+                    scoreElement.textContent = score;
+
+                    hole.classList.remove('active');
+                    hole.classList.remove('star');
+
+                    // フィーバーモードを開始
+                    startFeverMode();
+
+                    // コンボは維持
+                    updateCombo(true);
+
+                    // 豪華なエフェクト
+                    createConfetti(x, y, 80);
+                    showScoreBurst(x, y, 10);
+
+                    const popup = document.createElement('div');
+                    popup.className = 'points-popup golden';
+                    popup.style.fontSize = '3.5em';
+                    popup.textContent = '🌟 フィーバー発動！';
+                    popup.style.left = x + 'px';
+                    popup.style.top = y + 'px';
+                    document.body.appendChild(popup);
+                    setTimeout(() => popup.remove(), 1200);
+
+                    // ヒットアニメーション
+                    hole.style.background = 'linear-gradient(135deg, #ff00ff 0%, #00ffff 50%, #ffff00 100%)';
+                    setTimeout(() => {
+                        hole.style.background = '#8b7355';
+                    }, 300);
                 } else {
                     // モグラをヒット
                     totalHits++; // 統計: ヒット数
                     const basePoints = isGolden ? 5 : 1;
-                    const points = basePoints * comboMultiplier;
+                    const feverMultiplier = isFeverMode ? 2 : 1;
+                    const points = basePoints * comboMultiplier * feverMultiplier;
                     score += points;
                     scoreElement.textContent = score;
                     hole.classList.remove('active');
@@ -1630,10 +1784,12 @@
                 hole.classList.remove('bomb');
                 hole.classList.remove('clock');
                 hole.classList.remove('treasure');
+                hole.classList.remove('star');
             });
 
-            // コンボをリセット
+            // コンボとフィーバーモードをリセット
             resetCombo();
+            endFeverMode();
 
             // タイマーの警告クラスをリセット
             timerElement.classList.remove('warning');
