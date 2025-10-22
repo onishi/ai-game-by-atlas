@@ -103,6 +103,16 @@
             content: '🐹';
         }
 
+        .hole.golden .mole {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        }
+
+        .hole.golden .mole::before {
+            content: '✨';
+            filter: drop-shadow(0 0 5px gold);
+        }
+
         .start-button {
             padding: 15px 40px;
             font-size: 1.3em;
@@ -156,6 +166,173 @@
             25% { transform: translateX(-5px); }
             75% { transform: translateX(5px); }
         }
+
+        .difficulty-selector {
+            margin-bottom: 20px;
+        }
+
+        .difficulty-selector label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .difficulty-btn {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .difficulty-btn:hover {
+            background: #f0f0ff;
+        }
+
+        .difficulty-btn.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .hammer {
+            position: absolute;
+            font-size: 4em;
+            pointer-events: none;
+            z-index: 1000;
+            animation: hammerHit 0.5s ease-out;
+        }
+
+        @keyframes hammerHit {
+            0% {
+                transform: rotate(-45deg) translateY(-100px);
+                opacity: 0;
+            }
+            50% {
+                transform: rotate(0deg) translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: rotate(10deg) translateY(20px);
+                opacity: 0;
+            }
+        }
+
+        .miss-indicator {
+            position: absolute;
+            font-size: 3em;
+            pointer-events: none;
+            color: #e74c3c;
+            font-weight: bold;
+            animation: missFloat 0.8s ease-out;
+            z-index: 999;
+        }
+
+        @keyframes missFloat {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+        }
+
+        .celebration-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s;
+        }
+
+        .celebration-overlay.show {
+            display: flex;
+        }
+
+        .celebration-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            animation: bounceIn 0.6s;
+        }
+
+        .celebration-content h2 {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .celebration-content p {
+            font-size: 1.5em;
+            color: #333;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .points-popup {
+            position: absolute;
+            font-size: 2em;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 999;
+            animation: pointsFloat 1s ease-out;
+        }
+
+        .points-popup.golden {
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+        }
+
+        .points-popup.normal {
+            color: #2ecc71;
+        }
+
+        @keyframes pointsFloat {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-80px);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -167,6 +344,15 @@
             <div class="timer">残り時間: <span id="timer">30</span>秒</div>
         </div>
         <div class="high-score">ハイスコア: <span id="highScore">0</span></div>
+
+        <div class="difficulty-selector" id="difficultySelector">
+            <label>難易度を選択:</label>
+            <div class="difficulty-buttons">
+                <button class="difficulty-btn" data-difficulty="easy">簡単 🌱</button>
+                <button class="difficulty-btn selected" data-difficulty="normal">普通 ⭐</button>
+                <button class="difficulty-btn" data-difficulty="hard">難しい 🔥</button>
+            </div>
+        </div>
 
         <div class="grid" id="grid">
             <div class="hole" data-index="0"><div class="mole"></div></div>
@@ -188,6 +374,14 @@
         </div>
     </div>
 
+    <div class="celebration-overlay" id="celebrationOverlay">
+        <div class="celebration-content">
+            <h2>🎉 新記録！やったね！ 🎉</h2>
+            <p>おめでとうございます！</p>
+            <p>新しいハイスコア: <strong id="celebrationScore">0</strong></p>
+        </div>
+    </div>
+
     <script>
         let score = 0;
         let timeLeft = 30;
@@ -196,6 +390,14 @@
         let isGameActive = false;
         let currentMoleSpeed = 800;
         let highScore = parseInt(localStorage.getItem('whackAMoleHighScore')) || 0;
+        let selectedDifficulty = 'normal';
+
+        // 難易度設定
+        const difficultySettings = {
+            easy: { initialSpeed: 1000, speeds: [1000, 800, 600, 500] },
+            normal: { initialSpeed: 800, speeds: [800, 600, 400, 300] },
+            hard: { initialSpeed: 600, speeds: [600, 400, 250, 150] }
+        };
 
         const scoreElement = document.getElementById('score');
         const timerElement = document.getElementById('timer');
@@ -204,10 +406,28 @@
         const finalScoreElement = document.getElementById('finalScore');
         const highScoreElement = document.getElementById('highScore');
         const newHighScoreElement = document.getElementById('newHighScore');
+        const celebrationOverlay = document.getElementById('celebrationOverlay');
+        const celebrationScore = document.getElementById('celebrationScore');
+        const difficultySelector = document.getElementById('difficultySelector');
+        const difficultyButtons = document.querySelectorAll('.difficulty-btn');
         const holes = document.querySelectorAll('.hole');
 
         // 初期ハイスコア表示
         highScoreElement.textContent = highScore;
+
+        // 難易度選択
+        difficultyButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                difficultyButtons.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedDifficulty = btn.dataset.difficulty;
+            });
+        });
+
+        // 祝福オーバーレイをクリックで閉じる
+        celebrationOverlay.addEventListener('click', () => {
+            celebrationOverlay.classList.remove('show');
+        });
 
         // 効果音を生成する関数
         function playHitSound() {
@@ -228,6 +448,48 @@
             oscillator.stop(audioContext.currentTime + 0.1);
         }
 
+        // ハンマーアニメーションを表示
+        function showHammerAnimation(x, y) {
+            const hammer = document.createElement('div');
+            hammer.className = 'hammer';
+            hammer.textContent = '🔨';
+            hammer.style.left = x + 'px';
+            hammer.style.top = y + 'px';
+            document.body.appendChild(hammer);
+            setTimeout(() => hammer.remove(), 500);
+        }
+
+        // ミスインジケーターを表示
+        function showMissIndicator(x, y) {
+            const miss = document.createElement('div');
+            miss.className = 'miss-indicator';
+            miss.textContent = 'MISS!';
+            miss.style.left = x + 'px';
+            miss.style.top = y + 'px';
+            document.body.appendChild(miss);
+            setTimeout(() => miss.remove(), 800);
+        }
+
+        // ポイントポップアップを表示
+        function showPointsPopup(x, y, points, isGolden) {
+            const popup = document.createElement('div');
+            popup.className = 'points-popup ' + (isGolden ? 'golden' : 'normal');
+            popup.textContent = '+' + points;
+            popup.style.left = x + 'px';
+            popup.style.top = y + 'px';
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 1000);
+        }
+
+        // 祝福アニメーションを表示
+        function showCelebration(newScore) {
+            celebrationScore.textContent = newScore;
+            celebrationOverlay.classList.add('show');
+            setTimeout(() => {
+                celebrationOverlay.classList.remove('show');
+            }, 3000);
+        }
+
         // スタートボタンのクリックイベント
         startButton.addEventListener('click', startGame);
 
@@ -241,15 +503,24 @@
             score = 0;
             timeLeft = 30;
             isGameActive = true;
-            currentMoleSpeed = 800;
+
+            // 難易度に応じた初期速度を設定
+            const settings = difficultySettings[selectedDifficulty];
+            currentMoleSpeed = settings.initialSpeed;
+
             scoreElement.textContent = score;
             timerElement.textContent = timeLeft;
             startButton.disabled = true;
+            difficultySelector.style.opacity = '0.5';
+            difficultyButtons.forEach(btn => btn.disabled = true);
             gameOverElement.classList.remove('show');
             newHighScoreElement.textContent = '';
 
             // すべてのモグラを隠す
-            holes.forEach(hole => hole.classList.remove('active'));
+            holes.forEach(hole => {
+                hole.classList.remove('active');
+                hole.classList.remove('golden');
+            });
 
             // タイマー開始
             gameInterval = setInterval(() => {
@@ -258,11 +529,11 @@
 
                 // 残り時間に応じて難易度を上げる（モグラ出現速度を上げる）
                 if (timeLeft === 20) {
-                    updateMoleSpeed(600);
+                    updateMoleSpeed(settings.speeds[1]);
                 } else if (timeLeft === 10) {
-                    updateMoleSpeed(400);
+                    updateMoleSpeed(settings.speeds[2]);
                 } else if (timeLeft === 5) {
-                    updateMoleSpeed(300);
+                    updateMoleSpeed(settings.speeds[3]);
                 }
 
                 if (timeLeft <= 0) {
@@ -286,11 +557,20 @@
             if (!isGameActive) return;
 
             // すべてのモグラを隠す
-            holes.forEach(hole => hole.classList.remove('active'));
+            holes.forEach(hole => {
+                hole.classList.remove('active');
+                hole.classList.remove('golden');
+            });
 
             // ランダムな穴を選択
             const randomIndex = Math.floor(Math.random() * holes.length);
             const randomHole = holes[randomIndex];
+
+            // 10%の確率で金色のモグラを出現
+            const isGolden = Math.random() < 0.1;
+            if (isGolden) {
+                randomHole.classList.add('golden');
+            }
 
             // モグラを表示
             randomHole.classList.add('active');
@@ -299,6 +579,7 @@
             const displayTime = Math.random() * 1000 + 500;
             setTimeout(() => {
                 randomHole.classList.remove('active');
+                randomHole.classList.remove('golden');
             }, displayTime);
         }
 
@@ -306,18 +587,28 @@
             if (!isGameActive) return;
 
             const hole = e.currentTarget;
+            const rect = hole.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
 
             if (hole.classList.contains('active')) {
                 // モグラをヒット
-                score++;
+                const isGolden = hole.classList.contains('golden');
+                const points = isGolden ? 3 : 1;
+                score += points;
                 scoreElement.textContent = score;
                 hole.classList.remove('active');
+                hole.classList.remove('golden');
 
                 // 効果音を鳴らす
                 playHitSound();
 
+                // ハンマーアニメーションとポイントポップアップを表示
+                showHammerAnimation(x, y);
+                showPointsPopup(x, y, points, isGolden);
+
                 // ヒットアニメーション
-                hole.style.background = '#2ecc71';
+                hole.style.background = isGolden ? '#FFD700' : '#2ecc71';
                 setTimeout(() => {
                     hole.style.background = '#8b7355';
                 }, 200);
@@ -325,6 +616,9 @@
                 // ミス（モグラがいない穴をクリック）
                 score = Math.max(0, score - 1); // スコアが0未満にならないようにする
                 scoreElement.textContent = score;
+
+                // ミスインジケーターを表示
+                showMissIndicator(x, y);
 
                 // ミスアニメーション
                 hole.style.background = '#e74c3c';
@@ -342,7 +636,14 @@
             clearInterval(moleInterval);
 
             // すべてのモグラを隠す
-            holes.forEach(hole => hole.classList.remove('active'));
+            holes.forEach(hole => {
+                hole.classList.remove('active');
+                hole.classList.remove('golden');
+            });
+
+            // 難易度選択ボタンを再度有効化
+            difficultySelector.style.opacity = '1';
+            difficultyButtons.forEach(btn => btn.disabled = false);
 
             // ハイスコアの更新
             if (score > highScore) {
@@ -350,6 +651,9 @@
                 localStorage.setItem('whackAMoleHighScore', highScore);
                 highScoreElement.textContent = highScore;
                 newHighScoreElement.textContent = '🎉 新記録達成！';
+
+                // 祝福アニメーションを表示
+                showCelebration(highScore);
             }
 
             // 結果表示
