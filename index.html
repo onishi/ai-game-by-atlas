@@ -113,6 +113,63 @@
             filter: drop-shadow(0 0 5px gold);
         }
 
+        .hole.bomb .mole {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.8);
+        }
+
+        .hole.bomb .mole::before {
+            content: '💣';
+            filter: drop-shadow(0 0 5px red);
+        }
+
+        .combo-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            display: none;
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        .combo-display.show {
+            display: block;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        .explosion {
+            position: absolute;
+            font-size: 5em;
+            pointer-events: none;
+            z-index: 1000;
+            animation: explode 0.6s ease-out;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5) rotate(180deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
         .start-button {
             padding: 15px 40px;
             font-size: 1.3em;
@@ -382,6 +439,10 @@
         </div>
     </div>
 
+    <div class="combo-display" id="comboDisplay">
+        🔥 <span id="comboCount">0</span> COMBO! x<span id="comboMultiplier">1</span>
+    </div>
+
     <script>
         let score = 0;
         let timeLeft = 30;
@@ -391,6 +452,9 @@
         let currentMoleSpeed = 800;
         let highScore = parseInt(localStorage.getItem('whackAMoleHighScore')) || 0;
         let selectedDifficulty = 'normal';
+        let combo = 0;
+        let comboMultiplier = 1;
+        let comboTimeout = null;
 
         // 難易度設定
         const difficultySettings = {
@@ -410,6 +474,9 @@
         const celebrationScore = document.getElementById('celebrationScore');
         const difficultySelector = document.getElementById('difficultySelector');
         const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+        const comboDisplay = document.getElementById('comboDisplay');
+        const comboCountElement = document.getElementById('comboCount');
+        const comboMultiplierElement = document.getElementById('comboMultiplier');
         const holes = document.querySelectorAll('.hole');
 
         // 初期ハイスコア表示
@@ -430,7 +497,7 @@
         });
 
         // 効果音を生成する関数
-        function playHitSound() {
+        function playSound(type) {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
@@ -438,14 +505,57 @@
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
 
-            oscillator.frequency.value = 800;
-            oscillator.type = 'sine';
-
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.1);
+            switch(type) {
+                case 'hit':
+                    // 通常ヒット音（爽快な音）
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+                case 'golden':
+                    // 金色モグラヒット音（キラキラ音）
+                    oscillator.frequency.value = 1200;
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    // 2つ目の音を追加
+                    setTimeout(() => {
+                        const osc2 = audioContext.createOscillator();
+                        const gain2 = audioContext.createGain();
+                        osc2.connect(gain2);
+                        gain2.connect(audioContext.destination);
+                        osc2.frequency.value = 1600;
+                        osc2.type = 'sine';
+                        gain2.gain.setValueAtTime(0.2, audioContext.currentTime);
+                        gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                        osc2.start(audioContext.currentTime);
+                        osc2.stop(audioContext.currentTime + 0.15);
+                    }, 50);
+                    break;
+                case 'miss':
+                    // ミス音（残念な音）
+                    oscillator.frequency.value = 200;
+                    oscillator.type = 'sawtooth';
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    break;
+                case 'bomb':
+                    // 爆発音
+                    oscillator.frequency.value = 100;
+                    oscillator.type = 'sawtooth';
+                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+            }
         }
 
         // ハンマーアニメーションを表示
@@ -468,6 +578,54 @@
             miss.style.top = y + 'px';
             document.body.appendChild(miss);
             setTimeout(() => miss.remove(), 800);
+        }
+
+        // 爆発アニメーションを表示
+        function showExplosion(x, y) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.textContent = '💥';
+            explosion.style.left = x + 'px';
+            explosion.style.top = y + 'px';
+            document.body.appendChild(explosion);
+            setTimeout(() => explosion.remove(), 600);
+        }
+
+        // コンボを更新
+        function updateCombo(isHit) {
+            if (isHit) {
+                combo++;
+                // コンボに応じて倍率を計算（3連続ごとに倍率アップ）
+                comboMultiplier = 1 + Math.floor(combo / 3);
+
+                comboCountElement.textContent = combo;
+                comboMultiplierElement.textContent = comboMultiplier;
+
+                if (combo >= 3) {
+                    comboDisplay.classList.add('show');
+                }
+
+                // コンボタイムアウトをリセット
+                if (comboTimeout) {
+                    clearTimeout(comboTimeout);
+                }
+                comboTimeout = setTimeout(() => {
+                    resetCombo();
+                }, 2000);
+            } else {
+                resetCombo();
+            }
+        }
+
+        // コンボをリセット
+        function resetCombo() {
+            combo = 0;
+            comboMultiplier = 1;
+            comboDisplay.classList.remove('show');
+            if (comboTimeout) {
+                clearTimeout(comboTimeout);
+                comboTimeout = null;
+            }
         }
 
         // ポイントポップアップを表示
@@ -503,6 +661,7 @@
             score = 0;
             timeLeft = 30;
             isGameActive = true;
+            resetCombo();
 
             // 難易度に応じた初期速度を設定
             const settings = difficultySettings[selectedDifficulty];
@@ -520,6 +679,7 @@
             holes.forEach(hole => {
                 hole.classList.remove('active');
                 hole.classList.remove('golden');
+                hole.classList.remove('bomb');
             });
 
             // タイマー開始
@@ -560,15 +720,21 @@
             holes.forEach(hole => {
                 hole.classList.remove('active');
                 hole.classList.remove('golden');
+                hole.classList.remove('bomb');
             });
 
             // ランダムな穴を選択
             const randomIndex = Math.floor(Math.random() * holes.length);
             const randomHole = holes[randomIndex];
 
-            // 10%の確率で金色のモグラを出現
-            const isGolden = Math.random() < 0.1;
-            if (isGolden) {
+            const rand = Math.random();
+
+            // 15%の確率で爆弾を出現
+            if (rand < 0.15) {
+                randomHole.classList.add('bomb');
+            }
+            // 10%の確率で金色のモグラを出現（爆弾でない場合）
+            else if (rand < 0.25) {
                 randomHole.classList.add('golden');
             }
 
@@ -580,6 +746,7 @@
             setTimeout(() => {
                 randomHole.classList.remove('active');
                 randomHole.classList.remove('golden');
+                randomHole.classList.remove('bomb');
             }, displayTime);
         }
 
@@ -592,33 +759,67 @@
             const y = rect.top + rect.height / 2;
 
             if (hole.classList.contains('active')) {
-                // モグラをヒット
+                const isBomb = hole.classList.contains('bomb');
                 const isGolden = hole.classList.contains('golden');
-                const points = isGolden ? 3 : 1;
-                score += points;
-                scoreElement.textContent = score;
-                hole.classList.remove('active');
-                hole.classList.remove('golden');
 
-                // 効果音を鳴らす
-                playHitSound();
+                if (isBomb) {
+                    // 爆弾をクリック（ペナルティ）
+                    score = Math.max(0, score - 5);
+                    timeLeft = Math.max(0, timeLeft - 3);
+                    scoreElement.textContent = score;
+                    timerElement.textContent = timeLeft;
 
-                // ハンマーアニメーションとポイントポップアップを表示
-                showHammerAnimation(x, y);
-                showPointsPopup(x, y, points, isGolden);
+                    hole.classList.remove('active');
+                    hole.classList.remove('bomb');
 
-                // ヒットアニメーション
-                hole.style.background = isGolden ? '#FFD700' : '#2ecc71';
-                setTimeout(() => {
-                    hole.style.background = '#8b7355';
-                }, 200);
+                    // 爆発音と爆発アニメーション
+                    playSound('bomb');
+                    showExplosion(x, y);
+
+                    // コンボをリセット
+                    resetCombo();
+
+                    // 爆発エフェクト
+                    hole.style.background = '#e74c3c';
+                    setTimeout(() => {
+                        hole.style.background = '#8b7355';
+                    }, 300);
+                } else {
+                    // モグラをヒット
+                    const basePoints = isGolden ? 5 : 1;
+                    const points = basePoints * comboMultiplier;
+                    score += points;
+                    scoreElement.textContent = score;
+                    hole.classList.remove('active');
+                    hole.classList.remove('golden');
+
+                    // 効果音を鳴らす
+                    playSound(isGolden ? 'golden' : 'hit');
+
+                    // コンボを更新
+                    updateCombo(true);
+
+                    // ハンマーアニメーションとポイントポップアップを表示
+                    showHammerAnimation(x, y);
+                    showPointsPopup(x, y, points, isGolden);
+
+                    // ヒットアニメーション
+                    hole.style.background = isGolden ? '#FFD700' : '#2ecc71';
+                    setTimeout(() => {
+                        hole.style.background = '#8b7355';
+                    }, 200);
+                }
             } else {
                 // ミス（モグラがいない穴をクリック）
-                score = Math.max(0, score - 1); // スコアが0未満にならないようにする
+                score = Math.max(0, score - 1);
                 scoreElement.textContent = score;
 
-                // ミスインジケーターを表示
+                // ミス音とミスインジケーターを表示
+                playSound('miss');
                 showMissIndicator(x, y);
+
+                // コンボをリセット
+                resetCombo();
 
                 // ミスアニメーション
                 hole.style.background = '#e74c3c';
@@ -639,7 +840,11 @@
             holes.forEach(hole => {
                 hole.classList.remove('active');
                 hole.classList.remove('golden');
+                hole.classList.remove('bomb');
             });
+
+            // コンボをリセット
+            resetCombo();
 
             // 難易度選択ボタンを再度有効化
             difficultySelector.style.opacity = '1';
