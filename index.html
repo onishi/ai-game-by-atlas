@@ -140,6 +140,22 @@
         .game-over.show {
             display: block;
         }
+
+        .high-score {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .miss {
+            animation: shake 0.3s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
     </style>
 </head>
 <body>
@@ -150,6 +166,7 @@
             <div class="score">スコア: <span id="score">0</span></div>
             <div class="timer">残り時間: <span id="timer">30</span>秒</div>
         </div>
+        <div class="high-score">ハイスコア: <span id="highScore">0</span></div>
 
         <div class="grid" id="grid">
             <div class="hole" data-index="0"><div class="mole"></div></div>
@@ -166,7 +183,8 @@
         <button class="start-button" id="startButton">ゲーム開始</button>
 
         <div class="game-over" id="gameOver">
-            ゲーム終了！最終スコア: <span id="finalScore">0</span>
+            ゲーム終了！最終スコア: <span id="finalScore">0</span><br>
+            <span id="newHighScore"></span>
         </div>
     </div>
 
@@ -176,13 +194,39 @@
         let gameInterval = null;
         let moleInterval = null;
         let isGameActive = false;
+        let currentMoleSpeed = 800;
+        let highScore = parseInt(localStorage.getItem('whackAMoleHighScore')) || 0;
 
         const scoreElement = document.getElementById('score');
         const timerElement = document.getElementById('timer');
         const startButton = document.getElementById('startButton');
         const gameOverElement = document.getElementById('gameOver');
         const finalScoreElement = document.getElementById('finalScore');
+        const highScoreElement = document.getElementById('highScore');
+        const newHighScoreElement = document.getElementById('newHighScore');
         const holes = document.querySelectorAll('.hole');
+
+        // 初期ハイスコア表示
+        highScoreElement.textContent = highScore;
+
+        // 効果音を生成する関数
+        function playHitSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
 
         // スタートボタンのクリックイベント
         startButton.addEventListener('click', startGame);
@@ -197,10 +241,12 @@
             score = 0;
             timeLeft = 30;
             isGameActive = true;
+            currentMoleSpeed = 800;
             scoreElement.textContent = score;
             timerElement.textContent = timeLeft;
             startButton.disabled = true;
             gameOverElement.classList.remove('show');
+            newHighScoreElement.textContent = '';
 
             // すべてのモグラを隠す
             holes.forEach(hole => hole.classList.remove('active'));
@@ -210,13 +256,30 @@
                 timeLeft--;
                 timerElement.textContent = timeLeft;
 
+                // 残り時間に応じて難易度を上げる（モグラ出現速度を上げる）
+                if (timeLeft === 20) {
+                    updateMoleSpeed(600);
+                } else if (timeLeft === 10) {
+                    updateMoleSpeed(400);
+                } else if (timeLeft === 5) {
+                    updateMoleSpeed(300);
+                }
+
                 if (timeLeft <= 0) {
                     endGame();
                 }
             }, 1000);
 
             // モグラ出現開始
-            moleInterval = setInterval(showRandomMole, 800);
+            showRandomMole();
+        }
+
+        function updateMoleSpeed(newSpeed) {
+            currentMoleSpeed = newSpeed;
+            if (moleInterval) {
+                clearInterval(moleInterval);
+            }
+            moleInterval = setInterval(showRandomMole, currentMoleSpeed);
         }
 
         function showRandomMole() {
@@ -245,15 +308,31 @@
             const hole = e.currentTarget;
 
             if (hole.classList.contains('active')) {
+                // モグラをヒット
                 score++;
                 scoreElement.textContent = score;
                 hole.classList.remove('active');
+
+                // 効果音を鳴らす
+                playHitSound();
 
                 // ヒットアニメーション
                 hole.style.background = '#2ecc71';
                 setTimeout(() => {
                     hole.style.background = '#8b7355';
                 }, 200);
+            } else {
+                // ミス（モグラがいない穴をクリック）
+                score = Math.max(0, score - 1); // スコアが0未満にならないようにする
+                scoreElement.textContent = score;
+
+                // ミスアニメーション
+                hole.style.background = '#e74c3c';
+                hole.classList.add('miss');
+                setTimeout(() => {
+                    hole.style.background = '#8b7355';
+                    hole.classList.remove('miss');
+                }, 300);
             }
         }
 
@@ -264,6 +343,14 @@
 
             // すべてのモグラを隠す
             holes.forEach(hole => hole.classList.remove('active'));
+
+            // ハイスコアの更新
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('whackAMoleHighScore', highScore);
+                highScoreElement.textContent = highScore;
+                newHighScoreElement.textContent = '🎉 新記録達成！';
+            }
 
             // 結果表示
             finalScoreElement.textContent = score;
