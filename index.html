@@ -486,6 +486,124 @@
                 opacity: 0;
             }
         }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            z-index: 999;
+            font-size: 2em;
+        }
+
+        .heart-particle {
+            animation: heartFloat 1.5s ease-out forwards;
+        }
+
+        @keyframes heartFloat {
+            0% {
+                transform: translateY(0) scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-30px) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-60px) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .rainbow-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid;
+            border-color: red orange yellow green blue indigo violet;
+            animation: rainbowPulse 0.6s ease-out;
+            pointer-events: none;
+            z-index: 998;
+        }
+
+        @keyframes rainbowPulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        .score-burst {
+            position: absolute;
+            font-size: 3em;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 999;
+            animation: scoreBurst 0.8s ease-out;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+        }
+
+        @keyframes scoreBurst {
+            0% {
+                transform: scale(0) rotate(-15deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.3) rotate(5deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.8) translateY(-100px) rotate(0deg);
+                opacity: 0;
+            }
+        }
+
+        .points-popup {
+            position: absolute;
+            font-size: 2.5em;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 999;
+            animation: pointsPopup 1.2s ease-out;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes pointsPopup {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 0;
+            }
+            20% {
+                transform: translateY(-10px) scale(1.3);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(1);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -607,10 +725,13 @@
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
 
+            // コンボに応じてピッチを上げる
+            const comboPitchMultiplier = 1 + (combo * 0.05);
+
             switch(type) {
                 case 'hit':
-                    // 通常ヒット音（爽快な音）
-                    oscillator.frequency.value = 800;
+                    // 通常ヒット音（爽快な音）- コンボでピッチアップ
+                    oscillator.frequency.value = 800 * comboPitchMultiplier;
                     oscillator.type = 'sine';
                     gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
                     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
@@ -618,8 +739,8 @@
                     oscillator.stop(audioContext.currentTime + 0.1);
                     break;
                 case 'golden':
-                    // 金色モグラヒット音（キラキラ音）
-                    oscillator.frequency.value = 1200;
+                    // 金色モグラヒット音（キラキラ音）- コンボでピッチアップ
+                    oscillator.frequency.value = 1200 * comboPitchMultiplier;
                     oscillator.type = 'sine';
                     gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
                     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
@@ -631,7 +752,7 @@
                         const gain2 = audioContext.createGain();
                         osc2.connect(gain2);
                         gain2.connect(audioContext.destination);
-                        osc2.frequency.value = 1600;
+                        osc2.frequency.value = 1600 * comboPitchMultiplier;
                         osc2.type = 'sine';
                         gain2.gain.setValueAtTime(0.2, audioContext.currentTime);
                         gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
@@ -759,15 +880,87 @@
             }
         }
 
-        // ポイントポップアップを表示
+        // ポイントポップアップを表示（強化版）
         function showPointsPopup(x, y, points, isGolden) {
             const popup = document.createElement('div');
             popup.className = 'points-popup ' + (isGolden ? 'golden' : 'normal');
             popup.textContent = '+' + points;
             popup.style.left = x + 'px';
             popup.style.top = y + 'px';
+
+            // コンボが高いほど大きく表示
+            if (combo >= 6) {
+                popup.style.fontSize = '3.5em';
+                popup.style.color = '#FF1493';
+            } else if (combo >= 3) {
+                popup.style.fontSize = '3em';
+            }
+
             document.body.appendChild(popup);
-            setTimeout(() => popup.remove(), 1000);
+            setTimeout(() => popup.remove(), 1200);
+        }
+
+        // ハートパーティクルを生成
+        function createHeartParticles(x, y, count = 5) {
+            const hearts = ['💖', '💕', '💗', '💓', '💝'];
+            for (let i = 0; i < count; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'particle heart-particle';
+                heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+
+                const angle = (Math.PI * 2 * i) / count;
+                const distance = 30 + Math.random() * 20;
+                const offsetX = Math.cos(angle) * distance;
+                const offsetY = Math.sin(angle) * distance;
+
+                heart.style.left = (x + offsetX) + 'px';
+                heart.style.top = (y + offsetY) + 'px';
+
+                document.body.appendChild(heart);
+                setTimeout(() => heart.remove(), 1500);
+            }
+        }
+
+        // 紙吹雪を生成
+        function createConfetti(x, y, count = 30) {
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+
+            for (let i = 0; i < count; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = x + (Math.random() * 100 - 50) + 'px';
+                confetti.style.top = y + 'px';
+
+                const duration = 1.5 + Math.random() * 1.5;
+                confetti.style.animation = `confettiFall ${duration}s ease-out forwards`;
+
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), duration * 1000);
+            }
+        }
+
+        // 虹のリングエフェクトを表示
+        function showRainbowRing(hole) {
+            const ring = document.createElement('div');
+            ring.className = 'rainbow-ring';
+            hole.appendChild(ring);
+            setTimeout(() => ring.remove(), 600);
+        }
+
+        // スコアバーストエフェクトを表示
+        function showScoreBurst(x, y, points) {
+            const burst = document.createElement('div');
+            burst.className = 'score-burst';
+            burst.textContent = '+' + points + '!';
+            burst.style.left = x + 'px';
+            burst.style.top = y + 'px';
+
+            const colors = ['#FFD700', '#FF69B4', '#00CED1', '#FF6347'];
+            burst.style.color = colors[Math.floor(Math.random() * colors.length)];
+
+            document.body.appendChild(burst);
+            setTimeout(() => burst.remove(), 800);
         }
 
         // 祝福アニメーションを表示
@@ -1011,6 +1204,21 @@
                     // ハンマーアニメーションとポイントポップアップを表示
                     showHammerAnimation(x, y);
                     showPointsPopup(x, y, points, isGolden);
+
+                    // コンボに応じたエフェクト
+                    if (combo >= 3) {
+                        // 虹のリングエフェクト
+                        showRainbowRing(hole);
+
+                        // ハートパーティクル
+                        createHeartParticles(x, y, 5);
+                    }
+
+                    // 高コンボまたは高得点で紙吹雪
+                    if (combo >= 6 || points >= 10) {
+                        createConfetti(x, y, combo >= 9 ? 40 : 30);
+                        showScoreBurst(x, y, points);
+                    }
 
                     // ヒットアニメーション
                     hole.style.background = isGolden ? '#FFD700' : '#2ecc71';
