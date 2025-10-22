@@ -123,28 +123,124 @@
             filter: drop-shadow(0 0 5px red);
         }
 
+        .hole.clock .mole {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            box-shadow: 0 0 20px rgba(52, 152, 219, 0.8);
+        }
+
+        .hole.clock .mole::before {
+            content: '⏰';
+            filter: drop-shadow(0 0 5px cyan);
+        }
+
+        .countdown-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
+        }
+
+        .countdown-overlay.show {
+            display: flex;
+        }
+
+        .countdown-number {
+            font-size: 10em;
+            color: white;
+            font-weight: bold;
+            animation: countdownPulse 1s ease-out;
+        }
+
+        @keyframes countdownPulse {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
         .combo-display {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 80px;
+            right: 30px;
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
-            padding: 15px 25px;
-            border-radius: 15px;
-            font-size: 1.2em;
+            padding: 20px 35px;
+            border-radius: 20px;
+            font-size: 1.8em;
             font-weight: bold;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
             display: none;
             animation: pulse 0.5s infinite alternate;
+            border: 3px solid rgba(255, 255, 255, 0.5);
         }
 
         .combo-display.show {
             display: block;
         }
 
+        .combo-display.mega {
+            animation: megaPulse 0.4s infinite alternate;
+            font-size: 2.2em;
+            background: linear-gradient(135deg, #FA8BFF 0%, #2BD2FF 50%, #2BFF88 100%);
+        }
+
         @keyframes pulse {
-            from { transform: scale(1); }
-            to { transform: scale(1.05); }
+            from {
+                transform: scale(1);
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            }
+            to {
+                transform: scale(1.08);
+                box-shadow: 0 12px 40px rgba(240, 147, 251, 0.6);
+            }
+        }
+
+        @keyframes megaPulse {
+            from {
+                transform: scale(1) rotate(-2deg);
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            }
+            to {
+                transform: scale(1.12) rotate(2deg);
+                box-shadow: 0 15px 50px rgba(43, 210, 255, 0.8);
+            }
+        }
+
+        .timer {
+            color: #e74c3c;
+            font-size: 1.8em;
+            transition: all 0.3s;
+        }
+
+        .timer.warning {
+            color: #c0392b;
+            animation: timerWarning 0.5s infinite alternate;
+            font-size: 2em;
+        }
+
+        @keyframes timerWarning {
+            from {
+                transform: scale(1);
+                color: #e74c3c;
+            }
+            to {
+                transform: scale(1.1);
+                color: #c0392b;
+            }
         }
 
         .explosion {
@@ -443,6 +539,10 @@
         🔥 <span id="comboCount">0</span> COMBO! x<span id="comboMultiplier">1</span>
     </div>
 
+    <div class="countdown-overlay" id="countdownOverlay">
+        <div class="countdown-number" id="countdownNumber">3</div>
+    </div>
+
     <script>
         let score = 0;
         let timeLeft = 30;
@@ -477,6 +577,8 @@
         const comboDisplay = document.getElementById('comboDisplay');
         const comboCountElement = document.getElementById('comboCount');
         const comboMultiplierElement = document.getElementById('comboMultiplier');
+        const countdownOverlay = document.getElementById('countdownOverlay');
+        const countdownNumber = document.getElementById('countdownNumber');
         const holes = document.querySelectorAll('.hole');
 
         // 初期ハイスコア表示
@@ -555,6 +657,28 @@
                     oscillator.start(audioContext.currentTime);
                     oscillator.stop(audioContext.currentTime + 0.3);
                     break;
+                case 'clock':
+                    // 時計ボーナス音（ポジティブな音）
+                    oscillator.frequency.value = 1000;
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    // 2音目
+                    setTimeout(() => {
+                        const osc2 = audioContext.createOscillator();
+                        const gain2 = audioContext.createGain();
+                        osc2.connect(gain2);
+                        gain2.connect(audioContext.destination);
+                        osc2.frequency.value = 1300;
+                        osc2.type = 'sine';
+                        gain2.gain.setValueAtTime(0.25, audioContext.currentTime);
+                        gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.25);
+                        osc2.start(audioContext.currentTime);
+                        osc2.stop(audioContext.currentTime + 0.25);
+                    }, 100);
+                    break;
             }
         }
 
@@ -605,6 +729,13 @@
                     comboDisplay.classList.add('show');
                 }
 
+                // 6コンボ以上でメガエフェクト
+                if (combo >= 6) {
+                    comboDisplay.classList.add('mega');
+                } else {
+                    comboDisplay.classList.remove('mega');
+                }
+
                 // コンボタイムアウトをリセット
                 if (comboTimeout) {
                     clearTimeout(comboTimeout);
@@ -649,12 +780,40 @@
         }
 
         // スタートボタンのクリックイベント
-        startButton.addEventListener('click', startGame);
+        startButton.addEventListener('click', () => {
+            startButton.disabled = true;
+            showCountdown();
+        });
 
         // 各穴のクリックイベント
         holes.forEach(hole => {
             hole.addEventListener('click', whackMole);
         });
+
+        // カウントダウンを表示
+        function showCountdown() {
+            let count = 3;
+            countdownOverlay.classList.add('show');
+
+            function updateCountdown() {
+                countdownNumber.textContent = count;
+                // アニメーションをリセットするため、クラスを再追加
+                countdownNumber.style.animation = 'none';
+                setTimeout(() => {
+                    countdownNumber.style.animation = 'countdownPulse 1s ease-out';
+                }, 10);
+
+                if (count > 0) {
+                    count--;
+                    setTimeout(updateCountdown, 1000);
+                } else {
+                    countdownOverlay.classList.remove('show');
+                    startGame();
+                }
+            }
+
+            updateCountdown();
+        }
 
         function startGame() {
             // ゲーム初期化
@@ -680,12 +839,23 @@
                 hole.classList.remove('active');
                 hole.classList.remove('golden');
                 hole.classList.remove('bomb');
+                hole.classList.remove('clock');
             });
+
+            // タイマーの警告クラスをリセット
+            timerElement.classList.remove('warning');
 
             // タイマー開始
             gameInterval = setInterval(() => {
                 timeLeft--;
                 timerElement.textContent = timeLeft;
+
+                // 残り時間が10秒以下で警告表示
+                if (timeLeft <= 10) {
+                    timerElement.classList.add('warning');
+                } else {
+                    timerElement.classList.remove('warning');
+                }
 
                 // 残り時間に応じて難易度を上げる（モグラ出現速度を上げる）
                 if (timeLeft === 20) {
@@ -721,6 +891,7 @@
                 hole.classList.remove('active');
                 hole.classList.remove('golden');
                 hole.classList.remove('bomb');
+                hole.classList.remove('clock');
             });
 
             // ランダムな穴を選択
@@ -733,8 +904,12 @@
             if (rand < 0.15) {
                 randomHole.classList.add('bomb');
             }
-            // 10%の確率で金色のモグラを出現（爆弾でない場合）
-            else if (rand < 0.25) {
+            // 5%の確率で時計ボーナスを出現
+            else if (rand < 0.20) {
+                randomHole.classList.add('clock');
+            }
+            // 10%の確率で金色のモグラを出現
+            else if (rand < 0.30) {
                 randomHole.classList.add('golden');
             }
 
@@ -747,6 +922,7 @@
                 randomHole.classList.remove('active');
                 randomHole.classList.remove('golden');
                 randomHole.classList.remove('bomb');
+                randomHole.classList.remove('clock');
             }, displayTime);
         }
 
@@ -758,9 +934,11 @@
             const x = rect.left + rect.width / 2;
             const y = rect.top + rect.height / 2;
 
+            // ヒット判定を改善 - active クラスを持つ全ての穴をチェック
             if (hole.classList.contains('active')) {
                 const isBomb = hole.classList.contains('bomb');
                 const isGolden = hole.classList.contains('golden');
+                const isClock = hole.classList.contains('clock');
 
                 if (isBomb) {
                     // 爆弾をクリック（ペナルティ）
@@ -784,6 +962,37 @@
                     setTimeout(() => {
                         hole.style.background = '#8b7355';
                     }, 300);
+                } else if (isClock) {
+                    // 時計ボーナスをクリック
+                    timeLeft += 5;
+                    score += 3;
+                    scoreElement.textContent = score;
+                    timerElement.textContent = timeLeft;
+
+                    hole.classList.remove('active');
+                    hole.classList.remove('clock');
+
+                    // 時計ボーナス音を鳴らす
+                    playSound('clock');
+
+                    // コンボは維持（ボーナスなのでリセットしない）
+                    updateCombo(true);
+
+                    // ポイントポップアップを表示
+                    const popup = document.createElement('div');
+                    popup.className = 'points-popup';
+                    popup.style.color = '#3498db';
+                    popup.textContent = '+5秒 +3点';
+                    popup.style.left = x + 'px';
+                    popup.style.top = y + 'px';
+                    document.body.appendChild(popup);
+                    setTimeout(() => popup.remove(), 1000);
+
+                    // ヒットアニメーション
+                    hole.style.background = '#3498db';
+                    setTimeout(() => {
+                        hole.style.background = '#8b7355';
+                    }, 200);
                 } else {
                     // モグラをヒット
                     const basePoints = isGolden ? 5 : 1;
@@ -841,10 +1050,14 @@
                 hole.classList.remove('active');
                 hole.classList.remove('golden');
                 hole.classList.remove('bomb');
+                hole.classList.remove('clock');
             });
 
             // コンボをリセット
             resetCombo();
+
+            // タイマーの警告クラスをリセット
+            timerElement.classList.remove('warning');
 
             // 難易度選択ボタンを再度有効化
             difficultySelector.style.opacity = '1';
