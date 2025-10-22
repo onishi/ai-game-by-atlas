@@ -133,6 +133,112 @@
             filter: drop-shadow(0 0 5px cyan);
         }
 
+        .hole.treasure .mole {
+            background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
+            box-shadow: 0 0 30px rgba(241, 196, 15, 0.9);
+            animation: treasureGlow 0.5s infinite alternate;
+        }
+
+        .hole.treasure .mole::before {
+            content: '🎁';
+            filter: drop-shadow(0 0 8px gold);
+        }
+
+        @keyframes treasureGlow {
+            from { box-shadow: 0 0 30px rgba(241, 196, 15, 0.9); }
+            to { box-shadow: 0 0 50px rgba(241, 196, 15, 1); }
+        }
+
+        .high-score-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10002;
+        }
+
+        .high-score-modal.show {
+            display: flex;
+        }
+
+        .high-score-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .high-score-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .high-score-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .high-score-list li {
+            padding: 15px;
+            margin: 10px 0;
+            background: #f0f0f0;
+            border-radius: 10px;
+            font-size: 1.3em;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .high-score-list li.gold {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: white;
+        }
+
+        .high-score-list li.silver {
+            background: linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%);
+            color: white;
+        }
+
+        .high-score-list li.bronze {
+            background: linear-gradient(135deg, #CD7F32 0%, #B8860B 100%);
+            color: white;
+        }
+
+        .name-input-container {
+            margin: 20px 0;
+        }
+
+        .name-input-container input {
+            padding: 10px;
+            font-size: 1.2em;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            width: 80%;
+            margin-top: 10px;
+        }
+
+        .close-modal-btn {
+            padding: 10px 30px;
+            font-size: 1.1em;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .close-modal-btn:hover {
+            background: #764ba2;
+        }
+
         .countdown-overlay {
             position: fixed;
             top: 0;
@@ -318,6 +424,57 @@
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-5px); }
             75% { transform: translateX(5px); }
+        }
+
+        .character-selector, .theme-selector, .difficulty-selector {
+            margin-bottom: 20px;
+        }
+
+        .character-selector label, .theme-selector label, .difficulty-selector label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .character-buttons, .theme-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .character-btn, .theme-btn {
+            padding: 10px 15px;
+            font-size: 1.5em;
+            border: 2px solid #667eea;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .character-btn:hover, .theme-btn:hover {
+            background: #f0f0ff;
+            transform: scale(1.05);
+        }
+
+        .character-btn.selected, .theme-btn.selected {
+            background: #667eea;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        body.theme-forest {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+        }
+
+        body.theme-ocean {
+            background: linear-gradient(135deg, #2E3192 0%, #1BFFFF 100%);
+        }
+
+        body.theme-space {
+            background: linear-gradient(135deg, #000428 0%, #004e92 100%);
         }
 
         .difficulty-selector {
@@ -616,6 +773,25 @@
         </div>
         <div class="high-score">ハイスコア: <span id="highScore">0</span></div>
 
+        <div class="character-selector" id="characterSelector">
+            <label>キャラクターを選択:</label>
+            <div class="character-buttons">
+                <button class="character-btn selected" data-character="hamster">🐹 ハムスター</button>
+                <button class="character-btn" data-character="cat">🐱 ネコ</button>
+                <button class="character-btn" data-character="rabbit">🐰 ウサギ</button>
+            </div>
+        </div>
+
+        <div class="theme-selector" id="themeSelector">
+            <label>背景テーマを選択:</label>
+            <div class="theme-buttons">
+                <button class="theme-btn selected" data-theme="default">🎨 デフォルト</button>
+                <button class="theme-btn" data-theme="forest">🌲 森</button>
+                <button class="theme-btn" data-theme="ocean">🌊 海</button>
+                <button class="theme-btn" data-theme="space">🌌 宇宙</button>
+            </div>
+        </div>
+
         <div class="difficulty-selector" id="difficultySelector">
             <label>難易度を選択:</label>
             <div class="difficulty-buttons">
@@ -661,6 +837,19 @@
         <div class="countdown-number" id="countdownNumber">3</div>
     </div>
 
+    <div class="high-score-modal" id="highScoreModal">
+        <div class="high-score-content">
+            <h2>🏆 ハイスコアランキング 🏆</h2>
+            <div class="name-input-container" id="nameInputContainer" style="display: none;">
+                <p>新記録達成！名前を入力してください：</p>
+                <input type="text" id="playerNameInput" maxlength="15" placeholder="プレイヤー名">
+            </div>
+            <ul class="high-score-list" id="highScoreList">
+            </ul>
+            <button class="close-modal-btn" id="closeModalBtn">閉じる</button>
+        </div>
+    </div>
+
     <script>
         let score = 0;
         let timeLeft = 30;
@@ -673,12 +862,22 @@
         let combo = 0;
         let comboMultiplier = 1;
         let comboTimeout = null;
+        let selectedCharacter = 'hamster';
+        let selectedTheme = 'default';
+        let highScores = JSON.parse(localStorage.getItem('whackAMoleHighScores')) || [];
 
         // 難易度設定
         const difficultySettings = {
             easy: { initialSpeed: 1000, speeds: [1000, 800, 600, 500] },
             normal: { initialSpeed: 800, speeds: [800, 600, 400, 300] },
             hard: { initialSpeed: 600, speeds: [600, 400, 250, 150] }
+        };
+
+        // キャラクターマッピング
+        const characterEmojis = {
+            hamster: '🐹',
+            cat: '🐱',
+            rabbit: '🐰'
         };
 
         const scoreElement = document.getElementById('score');
@@ -692,15 +891,44 @@
         const celebrationScore = document.getElementById('celebrationScore');
         const difficultySelector = document.getElementById('difficultySelector');
         const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+        const characterSelector = document.getElementById('characterSelector');
+        const characterButtons = document.querySelectorAll('.character-btn');
+        const themeSelector = document.getElementById('themeSelector');
+        const themeButtons = document.querySelectorAll('.theme-btn');
         const comboDisplay = document.getElementById('comboDisplay');
         const comboCountElement = document.getElementById('comboCount');
         const comboMultiplierElement = document.getElementById('comboMultiplier');
         const countdownOverlay = document.getElementById('countdownOverlay');
         const countdownNumber = document.getElementById('countdownNumber');
+        const highScoreModal = document.getElementById('highScoreModal');
+        const highScoreList = document.getElementById('highScoreList');
+        const nameInputContainer = document.getElementById('nameInputContainer');
+        const playerNameInput = document.getElementById('playerNameInput');
+        const closeModalBtn = document.getElementById('closeModalBtn');
         const holes = document.querySelectorAll('.hole');
 
         // 初期ハイスコア表示
         highScoreElement.textContent = highScore;
+
+        // キャラクター選択
+        characterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                characterButtons.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedCharacter = btn.dataset.character;
+                updateMoleCharacters();
+            });
+        });
+
+        // テーマ選択
+        themeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                themeButtons.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedTheme = btn.dataset.theme;
+                updateTheme();
+            });
+        });
 
         // 難易度選択
         difficultyButtons.forEach(btn => {
@@ -714,6 +942,65 @@
         // 祝福オーバーレイをクリックで閉じる
         celebrationOverlay.addEventListener('click', () => {
             celebrationOverlay.classList.remove('show');
+        });
+
+        // ハイスコアモーダルを閉じる
+        closeModalBtn.addEventListener('click', () => {
+            highScoreModal.classList.remove('show');
+        });
+
+        // キャラクターを更新する関数
+        function updateMoleCharacters() {
+            const style = document.createElement('style');
+            style.textContent = `.mole::before { content: '${characterEmojis[selectedCharacter]}'; }`;
+            document.head.appendChild(style);
+        }
+
+        // テーマを更新する関数
+        function updateTheme() {
+            document.body.className = selectedTheme !== 'default' ? `theme-${selectedTheme}` : '';
+        }
+
+        // ハイスコアリストを表示
+        function displayHighScores(isNewRecord = false) {
+            highScoreList.innerHTML = '';
+            const classes = ['gold', 'silver', 'bronze'];
+
+            highScores.slice(0, 3).forEach((entry, index) => {
+                const li = document.createElement('li');
+                li.className = classes[index] || '';
+                li.innerHTML = `
+                    <span>${index + 1}. ${entry.name}</span>
+                    <span>${entry.score}点</span>
+                `;
+                highScoreList.appendChild(li);
+            });
+
+            if (isNewRecord) {
+                nameInputContainer.style.display = 'block';
+                playerNameInput.value = '';
+                playerNameInput.focus();
+            } else {
+                nameInputContainer.style.display = 'none';
+            }
+
+            highScoreModal.classList.add('show');
+        }
+
+        // ハイスコアを保存
+        function saveHighScore(name, newScore) {
+            highScores.push({ name: name || 'プレイヤー', score: newScore });
+            highScores.sort((a, b) => b.score - a.score);
+            highScores = highScores.slice(0, 10); // トップ10まで保存
+            localStorage.setItem('whackAMoleHighScores', JSON.stringify(highScores));
+        }
+
+        // プレイヤー名入力後にエンターキーで保存
+        playerNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && playerNameInput.value.trim()) {
+                saveHighScore(playerNameInput.value.trim(), score);
+                displayHighScores(false);
+            }
         });
 
         // 効果音を生成する関数
@@ -799,6 +1086,24 @@
                         osc2.start(audioContext.currentTime);
                         osc2.stop(audioContext.currentTime + 0.25);
                     }, 100);
+                    break;
+                case 'treasure':
+                    // 宝箱音（ファンファーレ風）
+                    const frequencies = [523, 659, 784, 1047];
+                    frequencies.forEach((freq, i) => {
+                        setTimeout(() => {
+                            const osc = audioContext.createOscillator();
+                            const gain = audioContext.createGain();
+                            osc.connect(gain);
+                            gain.connect(audioContext.destination);
+                            osc.frequency.value = freq;
+                            osc.type = 'sine';
+                            gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                            osc.start(audioContext.currentTime);
+                            osc.stop(audioContext.currentTime + 0.2);
+                        }, i * 100);
+                    });
                     break;
             }
         }
@@ -1024,6 +1329,10 @@
             startButton.disabled = true;
             difficultySelector.style.opacity = '0.5';
             difficultyButtons.forEach(btn => btn.disabled = true);
+            characterSelector.style.opacity = '0.5';
+            characterButtons.forEach(btn => btn.disabled = true);
+            themeSelector.style.opacity = '0.5';
+            themeButtons.forEach(btn => btn.disabled = true);
             gameOverElement.classList.remove('show');
             newHighScoreElement.textContent = '';
 
@@ -1033,6 +1342,7 @@
                 hole.classList.remove('golden');
                 hole.classList.remove('bomb');
                 hole.classList.remove('clock');
+                hole.classList.remove('treasure');
             });
 
             // タイマーの警告クラスをリセット
@@ -1085,6 +1395,7 @@
                 hole.classList.remove('golden');
                 hole.classList.remove('bomb');
                 hole.classList.remove('clock');
+                hole.classList.remove('treasure');
             });
 
             // ランダムな穴を選択
@@ -1097,12 +1408,16 @@
             if (rand < 0.15) {
                 randomHole.classList.add('bomb');
             }
+            // 2%の確率で宝箱を出現
+            else if (rand < 0.17) {
+                randomHole.classList.add('treasure');
+            }
             // 5%の確率で時計ボーナスを出現
-            else if (rand < 0.20) {
+            else if (rand < 0.22) {
                 randomHole.classList.add('clock');
             }
             // 10%の確率で金色のモグラを出現
-            else if (rand < 0.30) {
+            else if (rand < 0.32) {
                 randomHole.classList.add('golden');
             }
 
@@ -1116,6 +1431,7 @@
                 randomHole.classList.remove('golden');
                 randomHole.classList.remove('bomb');
                 randomHole.classList.remove('clock');
+                randomHole.classList.remove('treasure');
             }, displayTime);
         }
 
@@ -1132,6 +1448,7 @@
                 const isBomb = hole.classList.contains('bomb');
                 const isGolden = hole.classList.contains('golden');
                 const isClock = hole.classList.contains('clock');
+                const isTreasure = hole.classList.contains('treasure');
 
                 if (isBomb) {
                     // 爆弾をクリック（ペナルティ）
@@ -1183,6 +1500,41 @@
 
                     // ヒットアニメーション
                     hole.style.background = '#3498db';
+                    setTimeout(() => {
+                        hole.style.background = '#8b7355';
+                    }, 200);
+                } else if (isTreasure) {
+                    // 宝箱をクリック（大量得点＋時間延長）
+                    const treasurePoints = 20;
+                    timeLeft += 10;
+                    score += treasurePoints;
+                    scoreElement.textContent = score;
+                    timerElement.textContent = timeLeft;
+
+                    hole.classList.remove('active');
+                    hole.classList.remove('treasure');
+
+                    // 宝箱音を鳴らす
+                    playSound('treasure');
+
+                    // コンボは維持
+                    updateCombo(true);
+
+                    // 紙吹雪と豪華なポップアップ
+                    createConfetti(x, y, 50);
+                    showScoreBurst(x, y, treasurePoints);
+
+                    const popup = document.createElement('div');
+                    popup.className = 'points-popup golden';
+                    popup.style.fontSize = '3.5em';
+                    popup.textContent = '🎁 +20点 +10秒!';
+                    popup.style.left = x + 'px';
+                    popup.style.top = y + 'px';
+                    document.body.appendChild(popup);
+                    setTimeout(() => popup.remove(), 1200);
+
+                    // ヒットアニメーション
+                    hole.style.background = '#f39c12';
                     setTimeout(() => {
                         hole.style.background = '#8b7355';
                     }, 200);
@@ -1259,6 +1611,7 @@
                 hole.classList.remove('golden');
                 hole.classList.remove('bomb');
                 hole.classList.remove('clock');
+                hole.classList.remove('treasure');
             });
 
             // コンボをリセット
@@ -1270,8 +1623,14 @@
             // 難易度選択ボタンを再度有効化
             difficultySelector.style.opacity = '1';
             difficultyButtons.forEach(btn => btn.disabled = false);
+            characterSelector.style.opacity = '1';
+            characterButtons.forEach(btn => btn.disabled = false);
+            themeSelector.style.opacity = '1';
+            themeButtons.forEach(btn => btn.disabled = false);
 
-            // ハイスコアの更新
+            // ハイスコアの更新とリスト確認
+            const isTopScore = highScores.length < 3 || score > highScores[highScores.length > 2 ? 2 : highScores.length - 1].score;
+
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem('whackAMoleHighScore', highScore);
@@ -1286,6 +1645,11 @@
             finalScoreElement.textContent = score;
             gameOverElement.classList.add('show');
             startButton.disabled = false;
+
+            // トップ3に入った場合はハイスコアモーダルを表示
+            if (isTopScore) {
+                setTimeout(() => displayHighScores(true), 2000);
+            }
         }
     </script>
 </body>
