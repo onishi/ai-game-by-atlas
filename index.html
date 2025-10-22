@@ -495,93 +495,99 @@
             75% { transform: translateX(5px); }
         }
 
-        .character-selector, .theme-selector, .difficulty-selector {
-            margin-bottom: 20px;
-        }
-
-        .character-selector label, .theme-selector label, .difficulty-selector label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .character-buttons, .theme-buttons {
+        .stage-info {
             display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .character-btn, .theme-btn {
-            padding: 10px 15px;
-            font-size: 1.5em;
-            border: 2px solid #667eea;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .character-btn:hover, .theme-btn:hover {
-            background: #f0f0ff;
-            transform: scale(1.05);
-        }
-
-        .character-btn.selected, .theme-btn.selected {
-            background: #667eea;
-            color: white;
-            transform: scale(1.1);
-        }
-
-        body.theme-forest {
-            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
-        }
-
-        body.theme-ocean {
-            background: linear-gradient(135deg, #2E3192 0%, #1BFFFF 100%);
-        }
-
-        body.theme-space {
-            background: linear-gradient(135deg, #000428 0%, #004e92 100%);
-        }
-
-        .difficulty-selector {
+            justify-content: space-around;
             margin-bottom: 20px;
+            font-size: 1.3em;
+            gap: 15px;
         }
 
-        .difficulty-selector label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .difficulty-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .difficulty-btn {
+        .stage, .target, .lives {
             padding: 10px 20px;
-            font-size: 1em;
-            border: 2px solid #667eea;
-            background: white;
-            color: #667eea;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
+            background: #f0f0f0;
+            border-radius: 10px;
             font-weight: bold;
         }
 
-        .difficulty-btn:hover {
-            background: #f0f0ff;
+        .stage {
+            color: #667eea;
         }
 
-        .difficulty-btn.selected {
-            background: #667eea;
+        .target {
+            color: #27ae60;
+        }
+
+        .lives {
+            color: #e74c3c;
+        }
+
+        .stage-clear-overlay, .game-complete-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10003;
+            animation: fadeIn 0.3s;
+        }
+
+        .stage-clear-overlay.show, .game-complete-overlay.show {
+            display: flex;
+        }
+
+        .stage-clear-content, .game-complete-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            animation: bounceIn 0.6s;
+            max-width: 500px;
+        }
+
+        .stage-clear-content h2, .game-complete-content h2 {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .clear-stats, .complete-stats {
+            margin: 25px 0;
+            font-size: 1.2em;
+        }
+
+        .clear-stats p, .complete-stats p {
+            margin: 10px 0;
+        }
+
+        .total-score {
+            font-size: 1.4em;
+            color: #27ae60;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
+        }
+
+        .next-stage-btn, .restart-btn {
+            padding: 15px 35px;
+            font-size: 1.3em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .next-stage-btn:hover, .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
 
         .hammer {
@@ -840,34 +846,11 @@
             <div class="score">スコア: <span id="score">0</span></div>
             <div class="timer">残り時間: <span id="timer">30</span>秒</div>
         </div>
-        <div class="high-score">ハイスコア: <span id="highScore">0</span></div>
 
-        <div class="character-selector" id="characterSelector">
-            <label>キャラクターを選択:</label>
-            <div class="character-buttons">
-                <button class="character-btn selected" data-character="hamster">🐹 ハムスター</button>
-                <button class="character-btn" data-character="cat">🐱 ネコ</button>
-                <button class="character-btn" data-character="rabbit">🐰 ウサギ</button>
-            </div>
-        </div>
-
-        <div class="theme-selector" id="themeSelector">
-            <label>背景テーマを選択:</label>
-            <div class="theme-buttons">
-                <button class="theme-btn selected" data-theme="default">🎨 デフォルト</button>
-                <button class="theme-btn" data-theme="forest">🌲 森</button>
-                <button class="theme-btn" data-theme="ocean">🌊 海</button>
-                <button class="theme-btn" data-theme="space">🌌 宇宙</button>
-            </div>
-        </div>
-
-        <div class="difficulty-selector" id="difficultySelector">
-            <label>難易度を選択:</label>
-            <div class="difficulty-buttons">
-                <button class="difficulty-btn" data-difficulty="easy">簡単 🌱</button>
-                <button class="difficulty-btn selected" data-difficulty="normal">普通 ⭐</button>
-                <button class="difficulty-btn" data-difficulty="hard">難しい 🔥</button>
-            </div>
+        <div class="stage-info">
+            <div class="stage">ステージ: <span id="currentStage">1</span></div>
+            <div class="target">目標: <span id="targetScore">20</span>点</div>
+            <div class="lives">ライフ: <span id="lives">❤️❤️❤️</span></div>
         </div>
 
         <div class="grid" id="grid">
@@ -896,6 +879,32 @@
             <h2>🎉 新記録！やったね！ 🎉</h2>
             <p>おめでとうございます！</p>
             <p>新しいハイスコア: <strong id="celebrationScore">0</strong></p>
+        </div>
+    </div>
+
+    <div class="stage-clear-overlay" id="stageClearOverlay">
+        <div class="stage-clear-content">
+            <h2>🎊 ステージクリア！ 🎊</h2>
+            <p>ステージ <span id="clearedStage">1</span> をクリアしました！</p>
+            <div class="clear-stats">
+                <p>最終スコア: <strong id="clearScore">0</strong>点</p>
+                <p>残り時間: <strong id="clearTime">0</strong>秒</p>
+                <p>タイムボーナス: <strong id="timeBonus">0</strong>点</p>
+                <p class="total-score">合計: <strong id="totalClearScore">0</strong>点</p>
+            </div>
+            <button class="next-stage-btn" id="nextStageBtn">次のステージへ →</button>
+        </div>
+    </div>
+
+    <div class="game-complete-overlay" id="gameCompleteOverlay">
+        <div class="game-complete-content">
+            <h2>🏆 全ステージクリア！ 🏆</h2>
+            <p>おめでとうございます！</p>
+            <div class="complete-stats">
+                <p>最終スコア: <strong id="finalTotalScore">0</strong>点</p>
+                <p>ハイスコア更新: <strong id="newHighScoreText">-</strong></p>
+            </div>
+            <button class="restart-btn" id="restartBtn">最初からプレイ</button>
         </div>
     </div>
 
@@ -928,18 +937,16 @@
 
     <script>
         let score = 0;
+        let totalScore = 0;
         let timeLeft = 30;
         let gameInterval = null;
         let moleInterval = null;
         let isGameActive = false;
         let currentMoleSpeed = 800;
         let highScore = parseInt(localStorage.getItem('whackAMoleHighScore')) || 0;
-        let selectedDifficulty = 'normal';
         let combo = 0;
         let comboMultiplier = 1;
         let comboTimeout = null;
-        let selectedCharacter = 'hamster';
-        let selectedTheme = 'default';
         let highScores = JSON.parse(localStorage.getItem('whackAMoleHighScores')) || [];
         let totalHits = 0;
         let totalClicks = 0;
@@ -947,18 +954,69 @@
         let isFeverMode = false;
         let feverTimeout = null;
 
-        // 難易度設定（遊びやすさ重視でバランス調整）
-        const difficultySettings = {
-            easy: { initialSpeed: 1500, speeds: [1500, 1200, 1000, 900] },
-            normal: { initialSpeed: 1200, speeds: [1200, 1000, 800, 600] },
-            hard: { initialSpeed: 900, speeds: [900, 700, 550, 400] }
-        };
+        // ステージシステム
+        let currentStage = 1;
+        let maxStage = 5;
+        let lives = 3;
+        let stageScore = 0;
 
-        // キャラクターマッピング
-        const characterEmojis = {
-            hamster: '🐹',
-            cat: '🐱',
-            rabbit: '🐰'
+        // ステージ設定（段階的に難易度UP）
+        const stageSettings = {
+            1: {
+                targetScore: 30,
+                time: 40,
+                speed: 1600,
+                speeds: [1600, 1400, 1200, 1100],
+                bombRate: 0.05,
+                goldenRate: 0.20,
+                starRate: 0.04,
+                clockRate: 0.12,
+                treasureRate: 0.05
+            },
+            2: {
+                targetScore: 50,
+                time: 35,
+                speed: 1400,
+                speeds: [1400, 1200, 1000, 900],
+                bombRate: 0.07,
+                goldenRate: 0.18,
+                starRate: 0.04,
+                clockRate: 0.10,
+                treasureRate: 0.04
+            },
+            3: {
+                targetScore: 70,
+                time: 35,
+                speed: 1200,
+                speeds: [1200, 1000, 800, 700],
+                bombRate: 0.08,
+                goldenRate: 0.16,
+                starRate: 0.03,
+                clockRate: 0.10,
+                treasureRate: 0.04
+            },
+            4: {
+                targetScore: 100,
+                time: 30,
+                speed: 1000,
+                speeds: [1000, 850, 700, 550],
+                bombRate: 0.10,
+                goldenRate: 0.15,
+                starRate: 0.03,
+                clockRate: 0.08,
+                treasureRate: 0.03
+            },
+            5: {
+                targetScore: 130,
+                time: 30,
+                speed: 900,
+                speeds: [900, 750, 600, 450],
+                bombRate: 0.12,
+                goldenRate: 0.14,
+                starRate: 0.02,
+                clockRate: 0.08,
+                treasureRate: 0.03
+            }
         };
 
         const scoreElement = document.getElementById('score');
@@ -966,16 +1024,8 @@
         const startButton = document.getElementById('startButton');
         const gameOverElement = document.getElementById('gameOver');
         const finalScoreElement = document.getElementById('finalScore');
-        const highScoreElement = document.getElementById('highScore');
-        const newHighScoreElement = document.getElementById('newHighScore');
         const celebrationOverlay = document.getElementById('celebrationOverlay');
         const celebrationScore = document.getElementById('celebrationScore');
-        const difficultySelector = document.getElementById('difficultySelector');
-        const difficultyButtons = document.querySelectorAll('.difficulty-btn');
-        const characterSelector = document.getElementById('characterSelector');
-        const characterButtons = document.querySelectorAll('.character-btn');
-        const themeSelector = document.getElementById('themeSelector');
-        const themeButtons = document.querySelectorAll('.theme-btn');
         const comboDisplay = document.getElementById('comboDisplay');
         const comboCountElement = document.getElementById('comboCount');
         const comboMultiplierElement = document.getElementById('comboMultiplier');
@@ -990,37 +1040,24 @@
         const feverIndicator = document.getElementById('feverIndicator');
         const holes = document.querySelectorAll('.hole');
 
-        // 初期ハイスコア表示
-        highScoreElement.textContent = highScore;
+        // ステージシステム用の要素
+        const currentStageElement = document.getElementById('currentStage');
+        const targetScoreElement = document.getElementById('targetScore');
+        const livesElement = document.getElementById('lives');
+        const stageClearOverlay = document.getElementById('stageClearOverlay');
+        const clearedStageElement = document.getElementById('clearedStage');
+        const clearScoreElement = document.getElementById('clearScore');
+        const clearTimeElement = document.getElementById('clearTime');
+        const timeBonusElement = document.getElementById('timeBonus');
+        const totalClearScoreElement = document.getElementById('totalClearScore');
+        const nextStageBtn = document.getElementById('nextStageBtn');
+        const gameCompleteOverlay = document.getElementById('gameCompleteOverlay');
+        const finalTotalScoreElement = document.getElementById('finalTotalScore');
+        const newHighScoreText = document.getElementById('newHighScoreText');
+        const restartBtn = document.getElementById('restartBtn');
 
-        // キャラクター選択
-        characterButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                characterButtons.forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                selectedCharacter = btn.dataset.character;
-                updateMoleCharacters();
-            });
-        });
-
-        // テーマ選択
-        themeButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                themeButtons.forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                selectedTheme = btn.dataset.theme;
-                updateTheme();
-            });
-        });
-
-        // 難易度選択
-        difficultyButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                difficultyButtons.forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                selectedDifficulty = btn.dataset.difficulty;
-            });
-        });
+        // 初期表示を更新
+        updateStageDisplay();
 
         // 祝福オーバーレイをクリックで閉じる
         celebrationOverlay.addEventListener('click', () => {
@@ -1032,16 +1069,42 @@
             highScoreModal.classList.remove('show');
         });
 
-        // キャラクターを更新する関数
-        function updateMoleCharacters() {
-            const style = document.createElement('style');
-            style.textContent = `.mole::before { content: '${characterEmojis[selectedCharacter]}'; }`;
-            document.head.appendChild(style);
+        // 次のステージへボタン
+        nextStageBtn.addEventListener('click', () => {
+            stageClearOverlay.classList.remove('show');
+            currentStage++;
+            if (currentStage <= maxStage) {
+                showCountdown();
+            }
+        });
+
+        // リスタートボタン
+        restartBtn.addEventListener('click', () => {
+            gameCompleteOverlay.classList.remove('show');
+            resetGame();
+            showCountdown();
+        });
+
+        // ゲームをリセット
+        function resetGame() {
+            currentStage = 1;
+            totalScore = 0;
+            lives = 3;
+            updateStageDisplay();
+            updateLivesDisplay();
         }
 
-        // テーマを更新する関数
-        function updateTheme() {
-            document.body.className = selectedTheme !== 'default' ? `theme-${selectedTheme}` : '';
+        // ステージ表示を更新
+        function updateStageDisplay() {
+            currentStageElement.textContent = currentStage;
+            const settings = stageSettings[currentStage];
+            targetScoreElement.textContent = settings.targetScore;
+        }
+
+        // ライフ表示を更新
+        function updateLivesDisplay() {
+            const hearts = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+            livesElement.textContent = hearts;
         }
 
         // ハイスコアリストを表示
@@ -1397,6 +1460,72 @@
             }
         }
 
+        // ステージクリア
+        function stageClear() {
+            isGameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(moleInterval);
+
+            // すべてのモグラを隠す
+            holes.forEach(hole => {
+                hole.classList.remove('active');
+                hole.classList.remove('golden');
+                hole.classList.remove('bomb');
+                hole.classList.remove('clock');
+                hole.classList.remove('treasure');
+                hole.classList.remove('star');
+            });
+
+            // コンボとフィーバーモードをリセット
+            resetCombo();
+            endFeverMode();
+
+            // タイムボーナス計算（1秒あたり2点）
+            const timeBonus = timeLeft * 2;
+            const stageTotal = score + timeBonus;
+            totalScore += stageTotal;
+
+            // クリア画面を表示
+            clearedStageElement.textContent = currentStage;
+            clearScoreElement.textContent = score;
+            clearTimeElement.textContent = timeLeft;
+            timeBonusElement.textContent = timeBonus;
+            totalClearScoreElement.textContent = stageTotal;
+
+            // 紙吹雪
+            createConfetti(window.innerWidth / 2, window.innerHeight / 2, 100);
+            playSound('treasure');
+
+            // 最終ステージをクリアした場合
+            if (currentStage === maxStage) {
+                setTimeout(() => {
+                    showGameComplete();
+                }, 2000);
+            } else {
+                stageClearOverlay.classList.add('show');
+            }
+
+            startButton.disabled = false;
+        }
+
+        // 全ステージクリア表示
+        function showGameComplete() {
+            stageClearOverlay.classList.remove('show');
+            finalTotalScoreElement.textContent = totalScore;
+
+            // ハイスコア更新確認
+            if (totalScore > highScore) {
+                highScore = totalScore;
+                localStorage.setItem('whackAMoleHighScore', highScore);
+                newHighScoreText.textContent = `新記録達成！ ${highScore}点`;
+                showCelebration(highScore);
+            } else {
+                newHighScoreText.textContent = `ハイスコア: ${highScore}点`;
+            }
+
+            gameCompleteOverlay.classList.add('show');
+        }
+
         // スタートボタンのクリックイベント
         startButton.addEventListener('click', () => {
             startButton.disabled = true;
@@ -1436,29 +1565,23 @@
         function startGame() {
             // ゲーム初期化
             score = 0;
-            timeLeft = 30;
             isGameActive = true;
             resetCombo();
             totalHits = 0;
             totalClicks = 0;
             maxComboReached = 0;
-            endFeverMode(); // フィーバーモードをリセット
+            endFeverMode();
 
-            // 難易度に応じた初期速度を設定
-            const settings = difficultySettings[selectedDifficulty];
-            currentMoleSpeed = settings.initialSpeed;
+            // 現在のステージ設定を取得
+            const settings = stageSettings[currentStage];
+            timeLeft = settings.time;
+            currentMoleSpeed = settings.speed;
 
             scoreElement.textContent = score;
             timerElement.textContent = timeLeft;
             startButton.disabled = true;
-            difficultySelector.style.opacity = '0.5';
-            difficultyButtons.forEach(btn => btn.disabled = true);
-            characterSelector.style.opacity = '0.5';
-            characterButtons.forEach(btn => btn.disabled = true);
-            themeSelector.style.opacity = '0.5';
-            themeButtons.forEach(btn => btn.disabled = true);
             gameOverElement.classList.remove('show');
-            newHighScoreElement.textContent = '';
+            updateStageDisplay();
 
             // すべてのモグラを隠す
             holes.forEach(hole => {
@@ -1485,13 +1608,22 @@
                     timerElement.classList.remove('warning');
                 }
 
-                // 残り時間に応じて難易度を上げる（モグラ出現速度を上げる）
-                if (timeLeft === 20) {
+                // 時間経過に応じて難易度を上げる
+                const totalTime = settings.time;
+                const elapsed = totalTime - timeLeft;
+                const quarter = Math.floor(totalTime / 4);
+
+                if (elapsed === quarter) {
                     updateMoleSpeed(settings.speeds[1]);
-                } else if (timeLeft === 10) {
+                } else if (elapsed === quarter * 2) {
                     updateMoleSpeed(settings.speeds[2]);
-                } else if (timeLeft === 5) {
+                } else if (elapsed === quarter * 3) {
                     updateMoleSpeed(settings.speeds[3]);
+                }
+
+                // 目標スコア達成でステージクリア
+                if (score >= settings.targetScore) {
+                    stageClear();
                 }
 
                 if (timeLeft <= 0) {
@@ -1528,27 +1660,32 @@
             const randomIndex = Math.floor(Math.random() * holes.length);
             const randomHole = holes[randomIndex];
 
+            // 現在のステージ設定を取得
+            const settings = stageSettings[currentStage];
             const rand = Math.random();
 
-            // バランス調整されたアイテム出現率（より遊びやすく）
-            // 8%の確率で爆弾を出現（10% → 8%に減少）
-            if (rand < 0.08) {
+            // ステージごとのアイテム出現率
+            let cumulativeRate = 0;
+
+            // 爆弾
+            cumulativeRate += settings.bombRate;
+            if (rand < cumulativeRate) {
                 randomHole.classList.add('bomb');
             }
-            // 4%の確率で宝箱を出現（3% → 4%に増加）
-            else if (rand < 0.12) {
+            // 宝箱
+            else if (rand < (cumulativeRate += settings.treasureRate)) {
                 randomHole.classList.add('treasure');
             }
-            // 3%の確率でスターを出現（新アイテム）
-            else if (rand < 0.15) {
+            // スター
+            else if (rand < (cumulativeRate += settings.starRate)) {
                 randomHole.classList.add('star');
             }
-            // 10%の確率で時計ボーナスを出現（7% → 10%に増加）
-            else if (rand < 0.25) {
+            // 時計
+            else if (rand < (cumulativeRate += settings.clockRate)) {
                 randomHole.classList.add('clock');
             }
-            // 18%の確率で金色のモグラを出現（15% → 18%に増加）
-            else if (rand < 0.43) {
+            // 金色
+            else if (rand < (cumulativeRate += settings.goldenRate)) {
                 randomHole.classList.add('golden');
             }
 
@@ -1794,44 +1931,46 @@
             // タイマーの警告クラスをリセット
             timerElement.classList.remove('warning');
 
-            // 難易度選択ボタンを再度有効化
-            difficultySelector.style.opacity = '1';
-            difficultyButtons.forEach(btn => btn.disabled = false);
-            characterSelector.style.opacity = '1';
-            characterButtons.forEach(btn => btn.disabled = false);
-            themeSelector.style.opacity = '1';
-            themeButtons.forEach(btn => btn.disabled = false);
+            // 目標スコアに到達できなかった場合
+            const settings = stageSettings[currentStage];
+            if (score < settings.targetScore) {
+                lives--;
+                updateLivesDisplay();
 
-            // ハイスコアの更新とリスト確認
-            const isTopScore = highScores.length < 3 || score > highScores[highScores.length > 2 ? 2 : highScores.length - 1].score;
+                if (lives > 0) {
+                    // ライフが残っている場合はリトライ
+                    alert(`目標スコアに届きませんでした！\n残りライフ: ${lives}\nもう一度挑戦しましょう！`);
+                    startButton.disabled = false;
+                } else {
+                    // ゲームオーバー
+                    alert(`ゲームオーバー！\nステージ${currentStage}で終了しました。\n最終スコア: ${totalScore}点`);
 
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem('whackAMoleHighScore', highScore);
-                highScoreElement.textContent = highScore;
-                newHighScoreElement.textContent = '🎉 新記録達成！';
+                    // ハイスコア更新確認
+                    if (totalScore > highScore) {
+                        highScore = totalScore;
+                        localStorage.setItem('whackAMoleHighScore', highScore);
+                        showCelebration(highScore);
+                    }
 
-                // 祝福アニメーションを表示
-                showCelebration(highScore);
-            }
+                    // 統計情報を表示
+                    const hitRate = totalClicks > 0 ? Math.round((totalHits / totalClicks) * 100) : 0;
+                    const gameStats = document.getElementById('gameStats');
+                    gameStats.innerHTML = `
+                        ステージ: ${currentStage}<br>
+                        最終スコア: ${totalScore}点<br>
+                        📊 命中率: ${hitRate}% (${totalHits}/${totalClicks})<br>
+                        🔥 最大コンボ: ${maxComboReached}
+                    `;
 
-            // 結果表示
-            finalScoreElement.textContent = score;
+                    gameOverElement.classList.add('show');
+                    finalScoreElement.textContent = totalScore;
 
-            // 統計情報を表示
-            const hitRate = totalClicks > 0 ? Math.round((totalHits / totalClicks) * 100) : 0;
-            const gameStats = document.getElementById('gameStats');
-            gameStats.innerHTML = `
-                📊 命中率: ${hitRate}% (${totalHits}/${totalClicks})<br>
-                🔥 最大コンボ: ${maxComboReached}
-            `;
-
-            gameOverElement.classList.add('show');
-            startButton.disabled = false;
-
-            // トップ3に入った場合はハイスコアモーダルを表示
-            if (isTopScore) {
-                setTimeout(() => displayHighScores(true), 2000);
+                    // ゲームをリセット
+                    startButton.disabled = false;
+                    setTimeout(() => {
+                        resetGame();
+                    }, 3000);
+                }
             }
         }
     </script>
