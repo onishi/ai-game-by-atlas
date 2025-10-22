@@ -818,6 +818,7 @@
         <div class="game-over" id="gameOver">
             ゲーム終了！最終スコア: <span id="finalScore">0</span><br>
             <span id="newHighScore"></span>
+            <div id="gameStats" style="margin-top: 15px; font-size: 0.9em; color: #666;"></div>
         </div>
     </div>
 
@@ -865,12 +866,15 @@
         let selectedCharacter = 'hamster';
         let selectedTheme = 'default';
         let highScores = JSON.parse(localStorage.getItem('whackAMoleHighScores')) || [];
+        let totalHits = 0;
+        let totalClicks = 0;
+        let maxComboReached = 0;
 
-        // 難易度設定
+        // 難易度設定（バランス調整済み）
         const difficultySettings = {
-            easy: { initialSpeed: 1000, speeds: [1000, 800, 600, 500] },
-            normal: { initialSpeed: 800, speeds: [800, 600, 400, 300] },
-            hard: { initialSpeed: 600, speeds: [600, 400, 250, 150] }
+            easy: { initialSpeed: 1200, speeds: [1200, 1000, 800, 700] },
+            normal: { initialSpeed: 900, speeds: [900, 700, 500, 400] },
+            hard: { initialSpeed: 700, speeds: [700, 500, 350, 250] }
         };
 
         // キャラクターマッピング
@@ -1145,6 +1149,11 @@
         function updateCombo(isHit) {
             if (isHit) {
                 combo++;
+                // 統計: 最大コンボを記録
+                if (combo > maxComboReached) {
+                    maxComboReached = combo;
+                }
+
                 // コンボに応じて倍率を計算（3連続ごとに倍率アップ）
                 comboMultiplier = 1 + Math.floor(combo / 3);
 
@@ -1319,6 +1328,9 @@
             timeLeft = 30;
             isGameActive = true;
             resetCombo();
+            totalHits = 0;
+            totalClicks = 0;
+            maxComboReached = 0;
 
             // 難易度に応じた初期速度を設定
             const settings = difficultySettings[selectedDifficulty];
@@ -1404,28 +1416,29 @@
 
             const rand = Math.random();
 
-            // 15%の確率で爆弾を出現
-            if (rand < 0.15) {
+            // バランス調整されたアイテム出現率
+            // 10%の確率で爆弾を出現（15% → 10%に減少）
+            if (rand < 0.10) {
                 randomHole.classList.add('bomb');
             }
-            // 2%の確率で宝箱を出現
-            else if (rand < 0.17) {
+            // 3%の確率で宝箱を出現（2% → 3%に増加）
+            else if (rand < 0.13) {
                 randomHole.classList.add('treasure');
             }
-            // 5%の確率で時計ボーナスを出現
-            else if (rand < 0.22) {
+            // 7%の確率で時計ボーナスを出現（5% → 7%に増加）
+            else if (rand < 0.20) {
                 randomHole.classList.add('clock');
             }
-            // 10%の確率で金色のモグラを出現
-            else if (rand < 0.32) {
+            // 15%の確率で金色のモグラを出現（10% → 15%に増加）
+            else if (rand < 0.35) {
                 randomHole.classList.add('golden');
             }
 
             // モグラを表示
             randomHole.classList.add('active');
 
-            // 0.5〜1.5秒後にモグラを隠す
-            const displayTime = Math.random() * 1000 + 500;
+            // 0.7〜1.8秒後にモグラを隠す（表示時間を延長）
+            const displayTime = Math.random() * 1100 + 700;
             setTimeout(() => {
                 randomHole.classList.remove('active');
                 randomHole.classList.remove('golden');
@@ -1442,6 +1455,8 @@
             const rect = hole.getBoundingClientRect();
             const x = rect.left + rect.width / 2;
             const y = rect.top + rect.height / 2;
+
+            totalClicks++; // 統計: 総クリック数
 
             // ヒット判定を改善 - active クラスを持つ全ての穴をチェック
             if (hole.classList.contains('active')) {
@@ -1474,6 +1489,7 @@
                     }, 300);
                 } else if (isClock) {
                     // 時計ボーナスをクリック
+                    totalHits++; // 統計: ヒット数
                     timeLeft += 5;
                     score += 3;
                     scoreElement.textContent = score;
@@ -1505,6 +1521,7 @@
                     }, 200);
                 } else if (isTreasure) {
                     // 宝箱をクリック（大量得点＋時間延長）
+                    totalHits++; // 統計: ヒット数
                     const treasurePoints = 20;
                     timeLeft += 10;
                     score += treasurePoints;
@@ -1540,6 +1557,7 @@
                     }, 200);
                 } else {
                     // モグラをヒット
+                    totalHits++; // 統計: ヒット数
                     const basePoints = isGolden ? 5 : 1;
                     const points = basePoints * comboMultiplier;
                     score += points;
@@ -1643,6 +1661,15 @@
 
             // 結果表示
             finalScoreElement.textContent = score;
+
+            // 統計情報を表示
+            const hitRate = totalClicks > 0 ? Math.round((totalHits / totalClicks) * 100) : 0;
+            const gameStats = document.getElementById('gameStats');
+            gameStats.innerHTML = `
+                📊 命中率: ${hitRate}% (${totalHits}/${totalClicks})<br>
+                🔥 最大コンボ: ${maxComboReached}
+            `;
+
             gameOverElement.classList.add('show');
             startButton.disabled = false;
 
